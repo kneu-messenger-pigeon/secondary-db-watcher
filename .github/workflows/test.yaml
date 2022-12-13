@@ -8,4 +8,4 @@ on:
 
 jobs:
   test:
-    uses: kneu-messenger-pigeon/github-workflows/.github/workflows/release.yaml@test
+    uses: kneu-messenger-pigeon/github-workflows/.github/workflows/test.yaml@main
