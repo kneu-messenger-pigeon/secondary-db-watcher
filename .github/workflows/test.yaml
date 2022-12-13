@@ -8,17 +8,4 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
-
-      - name: Test
-        run: go test -v .
+    uses: kneu-messenger-pigeon/github-workflows/.github/workflows/release.yaml@test
