@@ -9,7 +9,6 @@ COPY ./go.mod ./go.sum ./
 RUN go mod download
 
 COPY . .
-
 RUN cat /etc/passwd | grep nobody > /etc/passwd.nobody
 
 # Build the binary.
