@@ -4,14 +4,9 @@ on:
   push:
     branches: ['main']
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
   build:
     permissions:
       contents: read
       packages: write
     uses: kneu-messenger-pigeon/github-workflows/.github/workflows/release.yaml@main
-    secrets: inherit
