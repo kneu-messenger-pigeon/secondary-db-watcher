@@ -27,7 +27,7 @@ func newDekanatDbMock(expectedResult interface{}) *sql.DB {
 		time := expectedResult.(time.Time)
 
 		mock.ExpectQuery(expectedGetDatetimeQuery).WillReturnRows(
-			sqlmock.NewRows([]string{"CON_DATA"}).AddRow(time.Format("2006-01-02T15:04:05+02:00")),
+			sqlmock.NewRows([]string{"CON_DATA"}).AddRow(time.Format(FirebirdTimeFormat)),
 		)
 
 	case string:
@@ -322,7 +322,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		expectedError = errors.New("Failed to detect current education year:")
 
-		db = newDekanatDbMock("2000-01-01T04:00:00+02:00")
+		db = newDekanatDbMock("2000-01-01T04:00:00Z")
 		storage = NewMockStorageInterface(t)
 		storage.On("get").Return(previousDatetimeString, nil)
 

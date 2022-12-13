@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
+
+const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
 func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventbus EventbusInterface) error {
 	var currentDbStateDatetime time.Time
@@ -79,7 +82,10 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 		return time.Time{}, errors.New(fmt.Sprintf("empty last date from DB: %s", err))
 	}
 
-	return time.ParseInLocation("2006-01-02T15:04:05+02:00", lastDatetimeString, getTimeLocation())
+	lastDatetimeString = strings.Replace(lastDatetimeString, "Z", "", 1)
+	lastDatetimeString = strings.Replace(lastDatetimeString, "+02:00", "", 1)
+
+	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, getTimeLocation())
 }
 
 func extractEducationYear(dbStateDatetime time.Time) (int, error) {
