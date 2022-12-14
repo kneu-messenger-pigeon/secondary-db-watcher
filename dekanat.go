@@ -56,7 +56,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 		}
 	}
 
-	err = eventbus.sendSecondaryDbLoadedEvent(currentDbStateDatetime, previousDbStateDatetime)
+	err = eventbus.sendSecondaryDbLoadedEvent(currentDbStateDatetime, previousDbStateDatetime, currentEducationYear)
 	if err != nil {
 		_ = storage.set(previousDbStateDatetime.Format(time.UnixDate))
 		return errors.New("Failed to send Secondary DB loaded Event to Kafka: " + err.Error())

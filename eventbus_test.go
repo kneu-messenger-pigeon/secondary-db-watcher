@@ -21,6 +21,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 	payload, _ := json.Marshal(events.SecondaryDbLoadedEvent{
 		CurrentSecondaryDatabaseDatetime:  currentDatetime,
 		PreviousSecondaryDatabaseDatetime: previousDatetime,
+		Year:                              currentDatetime.Year(),
 	})
 
 	expectedMessage := kafka.Message{
@@ -33,7 +34,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
 		eventbus := Eventbus{writer: writer}
-		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime)
+		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.NoErrorf(t, err, "Not expect for error")
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
@@ -44,7 +45,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
 		eventbus := Eventbus{writer: writer}
-		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime)
+		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.Errorf(t, err, "Expect for error")
 		assert.Equal(t, expectedError, err, "Got unexpected error")

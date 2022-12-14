@@ -9,7 +9,7 @@ import (
 )
 
 type EventbusInterface interface {
-	sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time) error
+	sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error
 	sendCurrentYearEvent(year int) error
 }
 
@@ -31,10 +31,11 @@ func (eventbus Eventbus) writeMessage(eventName string, event interface{}) error
 	)
 }
 
-func (eventbus Eventbus) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time) error {
+func (eventbus Eventbus) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error {
 	return eventbus.writeMessage(events.SecondaryDbLoadedEventName, events.SecondaryDbLoadedEvent{
 		CurrentSecondaryDatabaseDatetime:  currentDatabaseStateDatetime,
 		PreviousSecondaryDatabaseDatetime: previousDatabaseStateDatetime,
+		Year:                              year,
 	})
 }
 

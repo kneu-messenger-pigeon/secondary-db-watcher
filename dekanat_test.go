@@ -183,13 +183,13 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer = NewMockEventbusInterface(t)
 		producer.On("sendCurrentYearEvent", 2023).Return(nil)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime).Return(nil)
+		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(nil)
 
 		err = checkDekanatDb(db, storage, producer)
 
 		assert.NoErrorf(t, err, "checkDekanat failed with error: %s", err)
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime)
+		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
 		producer.AssertCalled(t, "sendCurrentYearEvent", 2023)
 		storage.AssertCalled(t, "set", expectedDatetimeString)
 	})
@@ -217,7 +217,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		assert.Error(t, err, "checkDekanat should fails with error")
 
-		producer.AssertNotCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime)
+		producer.AssertNotCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
 		producer.AssertCalled(t, "sendCurrentYearEvent", 2023)
 		storage.AssertCalled(t, "set", expectedDatetimeString)
 		storage.AssertCalled(t, "set", previousDatetimeString)
@@ -237,13 +237,13 @@ func TestCheckDekanatDb(t *testing.T) {
 		storage.On("set", expectedDatetimeString).Return(nil)
 
 		producer = NewMockEventbusInterface(t)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime).Return(nil)
+		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(nil)
 
 		err = checkDekanatDb(db, storage, producer)
 
 		assert.NoErrorf(t, err, "checkDekanat failed with error: %s", err)
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime)
+		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
 		storage.AssertCalled(t, "set", expectedDatetimeString)
 	})
@@ -265,13 +265,13 @@ func TestCheckDekanatDb(t *testing.T) {
 		storage.On("set", previousDatetimeString).Return(nil)
 
 		producer = NewMockEventbusInterface(t)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime).Return(expectedError)
+		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(expectedError)
 
 		err = checkDekanatDb(db, storage, producer)
 
 		assert.Error(t, err, "expect checkDekanat fails")
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime)
+		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
 		storage.AssertCalled(t, "set", expectedDatetimeString)
 		storage.AssertCalled(t, "set", previousDatetimeString)

@@ -27,13 +27,13 @@ func (_m *MockEventbusInterface) sendCurrentYearEvent(year int) error {
 	return r0
 }
 
-// sendSecondaryDbLoadedEvent provides a mock function with given fields: currentDatabaseStateDatetime, previousDatabaseStateDatetime
-func (_m *MockEventbusInterface) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time) error {
-	ret := _m.Called(currentDatabaseStateDatetime, previousDatabaseStateDatetime)
+// sendSecondaryDbLoadedEvent provides a mock function with given fields: currentDatabaseStateDatetime, previousDatabaseStateDatetime, year
+func (_m *MockEventbusInterface) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error {
+	ret := _m.Called(currentDatabaseStateDatetime, previousDatabaseStateDatetime, year)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(time.Time, time.Time) error); ok {
-		r0 = rf(currentDatabaseStateDatetime, previousDatabaseStateDatetime)
+	if rf, ok := ret.Get(0).(func(time.Time, time.Time, int) error); ok {
+		r0 = rf(currentDatabaseStateDatetime, previousDatabaseStateDatetime, year)
 	} else {
 		r0 = ret.Error(0)
 	}
