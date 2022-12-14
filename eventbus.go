@@ -13,12 +13,8 @@ type EventbusInterface interface {
 	sendCurrentYearEvent(year int) error
 }
 
-type WriterInterface interface {
-	WriteMessages(ctx context.Context, msgs ...kafka.Message) error
-}
-
 type Eventbus struct {
-	writer WriterInterface
+	writer events.WriterInterface
 }
 
 func (eventbus Eventbus) writeMessage(eventName string, event interface{}) error {

@@ -30,7 +30,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 	}
 
 	t.Run("Success send", func(t *testing.T) {
-		writer := NewMockWriterInterface(t)
+		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
 		eventbus := Eventbus{writer: writer}
@@ -41,7 +41,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
-		writer := NewMockWriterInterface(t)
+		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
 		eventbus := Eventbus{writer: writer}
@@ -67,7 +67,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 	}
 
 	t.Run("Success send", func(t *testing.T) {
-		writer := NewMockWriterInterface(t)
+		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
 		eventbus := Eventbus{writer: writer}
@@ -79,7 +79,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
-		writer := NewMockWriterInterface(t)
+		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
 		eventbus := Eventbus{writer: writer}
