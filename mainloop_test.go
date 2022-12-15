@@ -33,7 +33,7 @@ func TestMainLoopThreeSuccessIterations(t *testing.T) {
 	err := runMainLoop(config, &out, executeIteration)
 	output := out.String()
 
-	assert.Emptyf(t, output, "Expected empty output, receive: %s", output)
+	assert.Contains(t, output, "iteration done success", "output not contains iteration done success")
 	assert.Equalf(
 		t, wantExecutedCount, functionExecutedCount,
 		"Iteration Function is not executed expected amount times: %q, want %q",

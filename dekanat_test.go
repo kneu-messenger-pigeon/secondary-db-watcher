@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"log"
@@ -50,7 +49,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	var actualDatetime time.Time
 	var actualErr error
-	fmt.Println(time.LoadLocation("Europe/Kyiv"))
+
 	t.Run("valid datetime", func(t *testing.T) {
 		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, getTimeLocation())
 		db = newDekanatDbMock(expectedDatetime)
@@ -92,7 +91,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 		db = newDekanatDbMock(nil)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
-		fmt.Println(actualErr)
+
 		assert.Error(t, actualErr)
 		assert.Equalf(t, actualErr.Error(), expectedErr.Error(),
 			"Expect getDbStateDatetime(db) = nil, %s, actual: %s, %s", expectedErr, actualDatetime, actualErr,
@@ -106,7 +105,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 		mock.ExpectPing().WillReturnError(expectedErr)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
-		fmt.Println(actualErr)
+
 		assert.Error(t, actualErr)
 		assert.Equalf(t, actualErr.Error(), expectedErr.Error(),
 			"Expect getDbStateDatetime(db) = nil, %s, actual: %s, %s", expectedErr, actualDatetime, actualErr,
@@ -385,7 +384,7 @@ func TestCheckDekanatDb(t *testing.T) {
 		producer = NewMockEventbusInterface(t)
 
 		err = checkDekanatDb(db, storage, producer)
-		fmt.Println(err)
+
 		assert.Error(t, err, "checkDekanat not failed with error")
 		assert.Containsf(t, err.Error(), expectedError.Error(), "Expected %s, acutal %s", expectedError, err)
 

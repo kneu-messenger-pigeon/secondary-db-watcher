@@ -33,6 +33,7 @@ func runMainLoop(config Config, out io.Writer, iterationExecutor func() error) e
 
 			time.Sleep(config.pauseAfterError)
 		} else {
+			fmt.Fprintln(out, getCurrentDatetime()+" iteration done success")
 			errorCount = 0
 			time.Sleep(config.pauseAfterSuccess)
 		}
