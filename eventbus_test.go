@@ -33,7 +33,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
-		eventbus := Eventbus{writer: writer}
+		eventbus := MetaEventbus{writer: writer}
 		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.NoErrorf(t, err, "Not expect for error")
@@ -44,7 +44,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
-		eventbus := Eventbus{writer: writer}
+		eventbus := MetaEventbus{writer: writer}
 		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.Errorf(t, err, "Expect for error")
@@ -70,7 +70,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
-		eventbus := Eventbus{writer: writer}
+		eventbus := MetaEventbus{writer: writer}
 
 		err := eventbus.sendCurrentYearEvent(expectedYear)
 
@@ -82,7 +82,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
-		eventbus := Eventbus{writer: writer}
+		eventbus := MetaEventbus{writer: writer}
 		err := eventbus.sendCurrentYearEvent(expectedYear)
 
 		assert.Errorf(t, err, "Expect for error")

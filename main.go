@@ -38,7 +38,7 @@ func runApp(out io.Writer) error {
 
 	defer kafkaWriter.Close()
 
-	eventbus := Eventbus{
+	eventbus := MetaEventbus{
 		kafkaWriter,
 	}
 

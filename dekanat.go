@@ -10,7 +10,7 @@ import (
 
 const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
-func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventbus EventbusInterface) error {
+func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventbus MetaEventbusInterface) error {
 	var currentDbStateDatetime time.Time
 	var previousDbStateDatetime time.Time
 	var err error
@@ -35,7 +35,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 
 	currentEducationYear, err := extractEducationYear(currentDbStateDatetime)
 	if err != nil {
-		return errors.New("Failed to detect current education year: " + err.Error())
+		return errors.New("failed to detect current education year: " + err.Error())
 	}
 
 	err = storage.set(currentDbStateDatetime.Format(time.UnixDate))

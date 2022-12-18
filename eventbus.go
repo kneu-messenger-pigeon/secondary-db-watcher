@@ -8,18 +8,18 @@ import (
 	"time"
 )
 
-type EventbusInterface interface {
+type MetaEventbusInterface interface {
 	sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error
 	sendCurrentYearEvent(year int) error
 }
 
-type Eventbus struct {
+type MetaEventbus struct {
 	writer events.WriterInterface
 }
 
-func (eventbus Eventbus) writeMessage(eventName string, event interface{}) error {
+func (metaEventbus MetaEventbus) writeMessage(eventName string, event interface{}) error {
 	payload, _ := json.Marshal(event)
-	return eventbus.writer.WriteMessages(context.Background(),
+	return metaEventbus.writer.WriteMessages(context.Background(),
 		kafka.Message{
 			Key:   []byte(eventName),
 			Value: payload,
@@ -27,16 +27,16 @@ func (eventbus Eventbus) writeMessage(eventName string, event interface{}) error
 	)
 }
 
-func (eventbus Eventbus) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error {
-	return eventbus.writeMessage(events.SecondaryDbLoadedEventName, events.SecondaryDbLoadedEvent{
+func (metaEventbus MetaEventbus) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error {
+	return metaEventbus.writeMessage(events.SecondaryDbLoadedEventName, events.SecondaryDbLoadedEvent{
 		CurrentSecondaryDatabaseDatetime:  currentDatabaseStateDatetime,
 		PreviousSecondaryDatabaseDatetime: previousDatabaseStateDatetime,
 		Year:                              year,
 	})
 }
 
-func (eventbus Eventbus) sendCurrentYearEvent(year int) error {
-	return eventbus.writeMessage(events.CurrentYearEventName, events.CurrentYearEvent{
+func (metaEventbus MetaEventbus) sendCurrentYearEvent(year int) error {
+	return metaEventbus.writeMessage(events.CurrentYearEventName, events.CurrentYearEvent{
 		Year: year,
 	})
 }
