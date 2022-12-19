@@ -33,7 +33,7 @@ func runApp(out io.Writer) error {
 	eventbus := MetaEventbus{
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
-			Topic:    "metaevents",
+			Topic:    "meta_events",
 			Balancer: &kafka.LeastBytes{},
 		},
 	}

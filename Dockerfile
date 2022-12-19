@@ -21,8 +21,8 @@ FROM alpine
 
 RUN apk add tzdata
 
-ENV STORAGE_FILE /storage.txt
-RUN touch "${STORAGE_FILE}" && chmod 777 "${STORAGE_FILE}"
+ENV STORAGE_FILE /storage/storage.txt
+RUN mkdir /storage && touch /storage/storage.txt && chmod 777 -R /storage/storage.txt
 
 COPY --from=builder /etc/passwd.nobody /etc/passwd
 COPY --from=builder /app /app
