@@ -40,6 +40,28 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
 	})
 
+	t.Run("Empty previous datetime send", func(t *testing.T) {
+		p, _ := json.Marshal(events.SecondaryDbLoadedEvent{
+			CurrentSecondaryDatabaseDatetime:  currentDatetime,
+			PreviousSecondaryDatabaseDatetime: time.Date(currentDatetime.Year(), 8, 1, 0, 0, 0, 0, currentDatetime.Location()),
+			Year:                              currentDatetime.Year(),
+		})
+
+		expected := kafka.Message{
+			Key:   []byte(events.SecondaryDbLoadedEventName),
+			Value: p,
+		}
+
+		writer := events.NewMockWriterInterface(t)
+		writer.On("WriteMessages", context.Background(), expected).Return(nil)
+
+		eventbus := MetaEventbus{writer: writer}
+		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, time.Time{}, currentDatetime.Year())
+
+		assert.NoErrorf(t, err, "Not expect for error")
+		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
+	})
+
 	t.Run("Failed send", func(t *testing.T) {
 		writer := events.NewMockWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)

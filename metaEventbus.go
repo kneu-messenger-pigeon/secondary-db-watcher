@@ -28,6 +28,13 @@ func (metaEventbus MetaEventbus) writeMessage(eventName string, event interface{
 }
 
 func (metaEventbus MetaEventbus) sendSecondaryDbLoadedEvent(currentDatabaseStateDatetime time.Time, previousDatabaseStateDatetime time.Time, year int) error {
+	if previousDatabaseStateDatetime.IsZero() {
+		previousDatabaseStateDatetime = time.Date(
+			year, 8, 1,
+			0, 0, 0, 0, currentDatabaseStateDatetime.Location(),
+		)
+	}
+
 	return metaEventbus.writeMessage(events.SecondaryDbLoadedEventName, events.SecondaryDbLoadedEvent{
 		CurrentSecondaryDatabaseDatetime:  currentDatabaseStateDatetime,
 		PreviousSecondaryDatabaseDatetime: previousDatabaseStateDatetime,
