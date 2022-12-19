@@ -59,7 +59,7 @@ func runApp(out io.Writer) error {
 	}
 
 	return runMainLoop(config, out, func() error {
-		return checkDekanatDb(secondaryDekanatDb, &storage, eventbus)
+		return checkDekanatDb(secondaryDekanatDb, &storage, &eventbus)
 	})
 }
 
