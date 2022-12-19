@@ -30,16 +30,12 @@ func runApp(out io.Writer) error {
 		return errors.New("Failed to load config: " + err.Error())
 	}
 
-	kafkaWriter := &kafka.Writer{
-		Addr:     kafka.TCP(config.kafkaHost),
-		Topic:    "metaevents",
-		Balancer: &kafka.LeastBytes{},
-	}
-
-	defer kafkaWriter.Close()
-
 	eventbus := MetaEventbus{
-		kafkaWriter,
+		writer: &kafka.Writer{
+			Addr:     kafka.TCP(config.kafkaHost),
+			Topic:    "metaevents",
+			Balancer: &kafka.LeastBytes{},
+		},
 	}
 
 	storage := Storage{
@@ -50,7 +46,10 @@ func runApp(out io.Writer) error {
 	if err != nil {
 		return errors.New("Wrong connection configuration for secondary Dekanat DB: " + err.Error())
 	}
-	defer secondaryDekanatDb.Close()
+	defer func() {
+		eventbus.writer.Close()
+		secondaryDekanatDb.Close()
+	}()
 
 	_, err = storage.get()
 	if err != nil {

@@ -24,6 +24,8 @@ github.com/kneu-messenger-pigeon/events v0.1.12 h1:+FcX0+i1KQ49qUQmGDAReB2JPJ4bb
 github.com/kneu-messenger-pigeon/events v0.1.12/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/kneu-messenger-pigeon/events v0.1.15 h1:s1bDvz4bql7SDt/U8OBXOiktxUFIUWwX5SwgfaiWRQA=
 github.com/kneu-messenger-pigeon/events v0.1.15/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
+github.com/kneu-messenger-pigeon/events v0.1.17 h1:3zsahTuqCqph8EE/4h2L021B2tAcssim9z5pQE1KpSk=
+github.com/kneu-messenger-pigeon/events v0.1.17/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NBk=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
