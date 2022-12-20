@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -12,16 +15,22 @@ var TooManyError = errors.New("too many error")
 
 func runMainLoop(config Config, out io.Writer, iterationExecutor func() error) error {
 	var err error
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer signal.Stop(sig)
 
 	errorCount := 0
-	for true {
+	var pause time.Duration
+	for {
 		err = iterationExecutor()
 
 		if errors.Is(err, BreakLoopError) {
 			break
 		}
 
+		pause = config.pauseAfterSuccess
 		if err != nil {
+			pause = config.pauseAfterError
 			fmt.Fprintln(out, getCurrentDatetime()+" "+err.Error())
 
 			errorCount++
@@ -31,12 +40,19 @@ func runMainLoop(config Config, out io.Writer, iterationExecutor func() error) e
 				break
 			}
 
-			time.Sleep(config.pauseAfterError)
 		} else {
 			fmt.Fprintln(out, getCurrentDatetime()+" iteration done success")
 			errorCount = 0
-			time.Sleep(config.pauseAfterSuccess)
 		}
+
+		select {
+		case <-time.After(pause): // nothing
+		case <-sig:
+			fmt.Fprintln(out, "cancelled")
+			return nil
+
+		}
+
 	}
 
 	return err
