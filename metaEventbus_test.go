@@ -12,7 +12,7 @@ import (
 )
 
 func TestSendSecondaryDbLoadedEvent(t *testing.T) {
-	loc := getTimeLocation()
+	loc := time.Local
 	previousDatetime := time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 	currentDatetime := time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 

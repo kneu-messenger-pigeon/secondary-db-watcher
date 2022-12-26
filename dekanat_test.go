@@ -51,7 +51,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 	var actualErr error
 
 	t.Run("valid datetime", func(t *testing.T) {
-		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, getTimeLocation())
+		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, time.Local)
 		db = newDekanatDbMock(expectedDatetime)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
@@ -117,7 +117,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 func TestExtractEducationYearValidInput(t *testing.T) {
 	var actualYear int
 	var err error
-	loc := getTimeLocation()
+	loc := time.Local
 
 	t.Run("valid input for extractEducationYear", func(t *testing.T) {
 		testCases := map[time.Time]int{
@@ -165,7 +165,7 @@ func TestCheckDekanatDb(t *testing.T) {
 	var expectedDatetimeString string
 	var err error
 	var expectedError error
-	loc := getTimeLocation()
+	loc := time.Local
 
 	t.Run("changeEducationYear", func(t *testing.T) {
 		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)

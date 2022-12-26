@@ -8,7 +8,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"io"
 	"os"
-	"time"
 )
 
 const ExitCodeMainError = 1
@@ -81,9 +80,4 @@ func handleExitError(errStream io.Writer, err error) int {
 	}
 
 	return 0
-}
-
-func getTimeLocation() *time.Location {
-	loc, _ := time.LoadLocation("Europe/Kyiv")
-	return loc
 }

@@ -22,7 +22,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 
 	previousDbStateDatetimeString, err := storage.get()
 	if previousDbStateDatetimeString != "" && err == nil {
-		previousDbStateDatetime, err = time.ParseInLocation(time.UnixDate, previousDbStateDatetimeString, getTimeLocation())
+		previousDbStateDatetime, err = time.ParseInLocation(time.UnixDate, previousDbStateDatetimeString, time.Local)
 	}
 
 	if err != nil {
@@ -85,7 +85,7 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	lastDatetimeString = strings.Replace(lastDatetimeString, "Z", "", 1)
 	lastDatetimeString = strings.Replace(lastDatetimeString, "+02:00", "", 1)
 
-	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, getTimeLocation())
+	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, time.Local)
 }
 
 func extractEducationYear(dbStateDatetime time.Time) (int, error) {
