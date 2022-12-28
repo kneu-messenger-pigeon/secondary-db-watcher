@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/kneu-messenger-pigeon/storage"
 	"strings"
 	"time"
 )
 
 const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
-func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventbus MetaEventbusInterface) error {
+func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, eventbus MetaEventbusInterface) error {
 	var currentDbStateDatetime time.Time
 	var previousDbStateDatetime time.Time
 	var err error
@@ -20,7 +21,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 		return errors.New("Failed to get last datetime from DB: " + err.Error())
 	}
 
-	previousDbStateDatetimeString, err := storage.get()
+	previousDbStateDatetimeString, err := storage.Get()
 	if previousDbStateDatetimeString != "" && err == nil {
 		previousDbStateDatetime, err = time.ParseInLocation(time.UnixDate, previousDbStateDatetimeString, time.Local)
 	}
@@ -38,7 +39,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 		return errors.New("failed to detect current education year: " + err.Error())
 	}
 
-	err = storage.set(currentDbStateDatetime.Format(time.UnixDate))
+	err = storage.Set(currentDbStateDatetime.Format(time.UnixDate))
 	if err != nil {
 		return err
 	}
@@ -51,14 +52,14 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage StorageInterface, eventb
 	if currentEducationYear != previousEducationYear {
 		err = eventbus.sendCurrentYearEvent(currentEducationYear)
 		if err != nil {
-			_ = storage.set(previousDbStateDatetime.Format(time.UnixDate))
+			_ = storage.Set(previousDbStateDatetime.Format(time.UnixDate))
 			return errors.New("Failed to send Current year event to Kafka: " + err.Error())
 		}
 	}
 
 	err = eventbus.sendSecondaryDbLoadedEvent(currentDbStateDatetime, previousDbStateDatetime, currentEducationYear)
 	if err != nil {
-		_ = storage.set(previousDbStateDatetime.Format(time.UnixDate))
+		_ = storage.Set(previousDbStateDatetime.Format(time.UnixDate))
 		return errors.New("Failed to send Secondary DB loaded Event to Kafka: " + err.Error())
 	}
 

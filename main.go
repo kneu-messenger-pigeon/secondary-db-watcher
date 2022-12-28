@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/kneu-messenger-pigeon/storage"
 	_ "github.com/nakagami/firebirdsql"
 	"github.com/segmentio/kafka-go"
 	"io"
@@ -37,8 +38,8 @@ func runApp(out io.Writer) error {
 		},
 	}
 
-	storage := Storage{
-		file: config.storageFile,
+	storage := storage.Storage{
+		File: config.storageFile,
 	}
 
 	secondaryDekanatDb, err := sql.Open(config.dekanatDbDriverName, config.secondaryDekanatDbDSN)
@@ -50,7 +51,7 @@ func runApp(out io.Writer) error {
 		secondaryDekanatDb.Close()
 	}()
 
-	_, err = storage.get()
+	_, err = storage.Get()
 	if err != nil {
 		return errors.New(fmt.Sprintf(
 			"Failed to load storage file %s - %s \n", config.storageFile, err,
