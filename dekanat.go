@@ -11,6 +11,8 @@ import (
 
 const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
+const StorageTimeFormat = time.RFC3339
+
 func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, eventbus MetaEventbusInterface) error {
 	var currentDbStateDatetime time.Time
 	var previousDbStateDatetime time.Time
@@ -23,7 +25,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, event
 
 	previousDbStateDatetimeString, err := storage.Get()
 	if previousDbStateDatetimeString != "" && err == nil {
-		previousDbStateDatetime, err = time.ParseInLocation(time.UnixDate, previousDbStateDatetimeString, time.Local)
+		previousDbStateDatetime, err = time.ParseInLocation(StorageTimeFormat, previousDbStateDatetimeString, time.Local)
 	}
 
 	if err != nil {
@@ -39,7 +41,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, event
 		return errors.New("failed to detect current education year: " + err.Error())
 	}
 
-	err = storage.Set(currentDbStateDatetime.Format(time.UnixDate))
+	err = storage.Set(currentDbStateDatetime.Format(StorageTimeFormat))
 	if err != nil {
 		return err
 	}
@@ -52,14 +54,14 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, event
 	if currentEducationYear != previousEducationYear {
 		err = eventbus.sendCurrentYearEvent(currentEducationYear)
 		if err != nil {
-			_ = storage.Set(previousDbStateDatetime.Format(time.UnixDate))
+			_ = storage.Set(previousDbStateDatetime.Format(StorageTimeFormat))
 			return errors.New("Failed to send Current year event to Kafka: " + err.Error())
 		}
 	}
 
 	err = eventbus.sendSecondaryDbLoadedEvent(currentDbStateDatetime, previousDbStateDatetime, currentEducationYear)
 	if err != nil {
-		_ = storage.Set(previousDbStateDatetime.Format(time.UnixDate))
+		_ = storage.Set(previousDbStateDatetime.Format(StorageTimeFormat))
 		return errors.New("Failed to send Secondary DB loaded Event to Kafka: " + err.Error())
 	}
 

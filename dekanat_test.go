@@ -172,8 +172,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		db = newDekanatDbMock(expectedDatetime)
 
@@ -198,8 +198,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		expectedError = errors.New("dummy error sendCurrentYearEvent")
 
@@ -227,8 +227,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		db = newDekanatDbMock(expectedDatetime)
 
@@ -252,8 +252,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		expectedError = errors.New("dummy error sendCurrentYearEvent")
 
@@ -281,8 +281,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		db = newDekanatDbMock(expectedDatetime)
 
@@ -318,7 +318,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 	t.Run("DekanatDbWrongDatetime", func(t *testing.T) {
 		previousDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
 
 		expectedError = errors.New("failed to detect current education year")
 
@@ -343,7 +343,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 	t.Run("StorageGetError", func(t *testing.T) {
 		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		expectedError = errors.New("Failed to detect current education year")
 
@@ -371,8 +371,8 @@ func TestCheckDekanatDb(t *testing.T) {
 		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
 		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
 
-		previousDatetimeString = previousDatetime.Format(time.UnixDate)
-		expectedDatetimeString = expectedDatetime.Format(time.UnixDate)
+		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
 
 		expectedError = errors.New("dummy set error")
 
