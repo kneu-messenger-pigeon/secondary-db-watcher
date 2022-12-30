@@ -12,6 +12,8 @@ github.com/klauspost/compress v1.15.9 h1:wKRjX6JRtDdrE9qwa4b/Cip7ACOshUI4smpCQan
 github.com/klauspost/compress v1.15.9/go.mod h1:PhcZ0MbTNciWF3rruxRgKxI5NkcHHrHUDtV4Yw2GlzU=
 github.com/kneu-messenger-pigeon/events v0.1.18 h1:oHGJjCMJt2ZdMthqPgtOm1KcWZcRZcAfbti6moYPJAg=
 github.com/kneu-messenger-pigeon/events v0.1.18/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
+github.com/kneu-messenger-pigeon/events v0.1.19 h1:WJxfPF//b7XHFQfm+7PrFSj7lBlUppzCXC3hYtAsCh4=
+github.com/kneu-messenger-pigeon/events v0.1.19/go.mod h1:yPgqpO/+XVOZmTdH8BB4wbE+2/keLNhjorMVzJwHQL8=
 github.com/kneu-messenger-pigeon/storage v1.0.2 h1:LCmQ0X73v9Q94vp5f6mqbLxGy7lew2WAK1IIEmqMXEM=
 github.com/kneu-messenger-pigeon/storage v1.0.2/go.mod h1:3fkxsWJpaqfCmiZz9m+u/V14xnWORADpu8h8iDkSxRU=
 github.com/kneu-messenger-pigeon/storage v1.0.3 h1:QsFccha8b3NBfaJl3KRzCUPvKWbAg7sZGktYwMtLdFc=
