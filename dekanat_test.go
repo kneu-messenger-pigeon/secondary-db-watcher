@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/kneu-messenger-pigeon/storage"
+	"github.com/kneu-messenger-pigeon/fileStorage"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
@@ -158,7 +158,7 @@ func TestExtractEducationYearValidInput(t *testing.T) {
 
 func TestCheckDekanatDb(t *testing.T) {
 	var db *sql.DB
-	var storageInstance *storage.MockInterface
+	var storageInstance *fileStorage.MockInterface
 	var producer *MockMetaEventbusInterface
 	var previousDatetime time.Time
 	var expectedDatetime time.Time
@@ -177,7 +177,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 		storageInstance.On("Set", expectedDatetimeString).Return(nil)
 
@@ -205,7 +205,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 		storageInstance.On("Set", expectedDatetimeString).Return(nil)
 		storageInstance.On("Set", previousDatetimeString).Return(nil)
@@ -232,7 +232,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 		storageInstance.On("Set", expectedDatetimeString).Return(nil)
 
@@ -259,7 +259,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 		storageInstance.On("Set", expectedDatetimeString).Return(nil)
 		storageInstance.On("Set", previousDatetimeString).Return(nil)
@@ -286,7 +286,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 
 		producer = NewMockMetaEventbusInterface(t)
@@ -303,7 +303,7 @@ func TestCheckDekanatDb(t *testing.T) {
 		expectedError = errors.New("dummy error")
 
 		db = newDekanatDbMock(expectedError)
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		producer = NewMockMetaEventbusInterface(t)
 
 		err = checkDekanatDb(db, storageInstance, producer)
@@ -323,7 +323,7 @@ func TestCheckDekanatDb(t *testing.T) {
 		expectedError = errors.New("failed to detect current education year")
 
 		db = newDekanatDbMock("2000-01-01T04:00:00Z")
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 
 		producer = NewMockMetaEventbusInterface(t)
@@ -349,8 +349,8 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return("", expectedError)
 
 		producer = NewMockMetaEventbusInterface(t)
@@ -378,7 +378,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		db = newDekanatDbMock(expectedDatetime)
 
-		storageInstance = storage.NewMockInterface(t)
+		storageInstance = fileStorage.NewMockInterface(t)
 		storageInstance.On("Get").Return(previousDatetimeString, nil)
 		storageInstance.On("Set", expectedDatetimeString).Return(expectedError)
 

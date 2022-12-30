@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/kneu-messenger-pigeon/storage"
+	"github.com/kneu-messenger-pigeon/fileStorage"
 	"strings"
 	"time"
 )
@@ -13,7 +13,7 @@ const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
 const StorageTimeFormat = time.RFC3339
 
-func checkDekanatDb(secondaryDekanatDb *sql.DB, storage storage.Interface, eventbus MetaEventbusInterface) error {
+func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, eventbus MetaEventbusInterface) error {
 	var currentDbStateDatetime time.Time
 	var previousDbStateDatetime time.Time
 	var err error

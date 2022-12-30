@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/kneu-messenger-pigeon/storage"
+	"github.com/kneu-messenger-pigeon/fileStorage"
 	_ "github.com/nakagami/firebirdsql"
 	"github.com/segmentio/kafka-go"
 	"io"
@@ -38,7 +38,7 @@ func runApp(out io.Writer) error {
 		},
 	}
 
-	storage := storage.Storage{
+	storage := fileStorage.Storage{
 		File: config.storageFile,
 	}
 
