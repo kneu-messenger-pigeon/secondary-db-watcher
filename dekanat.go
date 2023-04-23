@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kneu-messenger-pigeon/fileStorage"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -68,6 +69,9 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, e
 	return nil
 }
 
+// drop "+02:00" , "+03:00" etc in the end
+var removeTimeZone = regexp.MustCompile(`\+[0-9]{2}:[0-9]{2}$`)
+
 func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	err := secondaryDekanatDb.Ping()
 	if err != nil {
@@ -86,7 +90,7 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	}
 
 	lastDatetimeString = strings.Replace(lastDatetimeString, "Z", "", 1)
-	lastDatetimeString = strings.Replace(lastDatetimeString, "+02:00", "", 1)
+	lastDatetimeString = removeTimeZone.ReplaceAllString(lastDatetimeString, "")
 
 	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, time.Local)
 }
