@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/kneu-messenger-pigeon/events"
 	"github.com/kneu-messenger-pigeon/fileStorage"
 	_ "github.com/nakagami/firebirdsql"
 	"github.com/segmentio/kafka-go"
@@ -33,7 +34,7 @@ func runApp(out io.Writer) error {
 	eventbus := MetaEventbus{
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
-			Topic:    "meta_events",
+			Topic:    events.MetaEventsTopic,
 			Balancer: &kafka.LeastBytes{},
 		},
 	}
