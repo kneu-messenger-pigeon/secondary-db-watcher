@@ -21,7 +21,7 @@ RUN cat /etc/passwd | grep nobody > /etc/passwd.nobody
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags="-w -s" -tags=nomsgpack -o /app .
 
 # build a small image
-FROM alpine
+FROM --platform=${BUILDPLATFORM:-linux/amd64} alpine
 
 ENV TZ=Europe/Kyiv
 RUN apk add tzdata
