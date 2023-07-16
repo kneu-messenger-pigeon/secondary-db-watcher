@@ -1,2 +1,2 @@
-
-[![Build docker image](https://github.com/kneu-messenger-pigeon/secondary-db-watcher/actions/workflows/release.yaml/badge.svg)](https://github.com/kneu-messenger-pigeon/secondary-db-watcher/actions/workflows/release.yaml)
+[![Release](https://github.com/kneu-messenger-pigeon/secondary-db-watcher/actions/workflows/release.yaml/badge.svg)](https://github.com/kneu-messenger-pigeon/secondary-db-watcher/actions/workflows/release.yaml)
+[![codecov](https://codecov.io/gh/kneu-messenger-pigeon/secondary-db-watcher/branch/main/graph/badge.svg?token=HYI5IYUXND)](https://codecov.io/gh/kneu-messenger-pigeon/secondary-db-watcher)
