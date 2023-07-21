@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/kneu-messenger-pigeon/events"
+	"github.com/kneu-messenger-pigeon/events/mocks"
 	"github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -30,7 +31,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 	}
 
 	t.Run("Success send", func(t *testing.T) {
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
 		eventbus := MetaEventbus{writer: writer}
@@ -52,7 +53,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 			Value: p,
 		}
 
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expected).Return(nil)
 
 		eventbus := MetaEventbus{writer: writer}
@@ -63,7 +64,7 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
 		eventbus := MetaEventbus{writer: writer}
@@ -89,7 +90,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 	}
 
 	t.Run("Success send", func(t *testing.T) {
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
 		eventbus := MetaEventbus{writer: writer}
@@ -101,7 +102,7 @@ func TestSendCurrentYearEvent(t *testing.T) {
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
-		writer := events.NewMockWriterInterface(t)
+		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
 		eventbus := MetaEventbus{writer: writer}
