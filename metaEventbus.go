@@ -3,8 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/kneu-messenger-pigeon/events"
 	"github.com/segmentio/kafka-go"
+	"io"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +18,7 @@ type MetaEventbusInterface interface {
 
 type MetaEventbus struct {
 	writer events.WriterInterface
+	out    io.Writer
 }
 
 func (metaEventbus MetaEventbus) writeMessage(eventName string, event interface{}) error {
@@ -35,6 +39,7 @@ func (metaEventbus MetaEventbus) sendSecondaryDbLoadedEvent(currentDatabaseState
 		)
 	}
 
+	fmt.Fprintln(metaEventbus.out, "send SecondaryDbLoadedEvent ", currentDatabaseStateDatetime.Format(time.RFC3339))
 	return metaEventbus.writeMessage(events.SecondaryDbLoadedEventName, events.SecondaryDbLoadedEvent{
 		CurrentSecondaryDatabaseDatetime:  currentDatabaseStateDatetime,
 		PreviousSecondaryDatabaseDatetime: previousDatabaseStateDatetime,
@@ -43,6 +48,7 @@ func (metaEventbus MetaEventbus) sendSecondaryDbLoadedEvent(currentDatabaseState
 }
 
 func (metaEventbus MetaEventbus) sendCurrentYearEvent(year int) error {
+	fmt.Fprintln(metaEventbus.out, "send sendCurrentYearEvent ", strconv.Itoa(year))
 	return metaEventbus.writeMessage(events.CurrentYearEventName, events.CurrentYearEvent{
 		Year: year,
 	})

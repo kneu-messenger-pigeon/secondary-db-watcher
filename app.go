@@ -28,6 +28,7 @@ func runApp(out io.Writer) error {
 	}
 
 	eventbus := MetaEventbus{
+		out: out,
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(config.kafkaHost),
 			Topic:    events.MetaEventsTopic,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -34,11 +35,18 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
-		eventbus := MetaEventbus{writer: writer}
+		out := &bytes.Buffer{}
+
+		eventbus := MetaEventbus{
+			writer: writer,
+			out:    out,
+		}
 		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.NoErrorf(t, err, "Not expect for error")
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
+
+		assert.Contains(t, out.String(), "send SecondaryDbLoadedEvent")
 	})
 
 	t.Run("Empty previous datetime send", func(t *testing.T) {
@@ -56,18 +64,28 @@ func TestSendSecondaryDbLoadedEvent(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expected).Return(nil)
 
-		eventbus := MetaEventbus{writer: writer}
+		out := &bytes.Buffer{}
+
+		eventbus := MetaEventbus{
+			writer: writer,
+			out:    out,
+		}
 		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, time.Time{}, currentDatetime.Year())
 
 		assert.NoErrorf(t, err, "Not expect for error")
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
+
+		assert.Contains(t, out.String(), "send SecondaryDbLoadedEvent")
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
-		eventbus := MetaEventbus{writer: writer}
+		eventbus := MetaEventbus{
+			writer: writer,
+			out:    &bytes.Buffer{},
+		}
 		err := eventbus.sendSecondaryDbLoadedEvent(currentDatetime, previousDatetime, currentDatetime.Year())
 
 		assert.Errorf(t, err, "Expect for error")
@@ -93,23 +111,34 @@ func TestSendCurrentYearEvent(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(nil)
 
-		eventbus := MetaEventbus{writer: writer}
+		out := &bytes.Buffer{}
+		eventbus := MetaEventbus{
+			writer: writer,
+			out:    out,
+		}
 
 		err := eventbus.sendCurrentYearEvent(expectedYear)
 
 		assert.NoErrorf(t, err, "Not expect for error")
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
+
+		assert.Contains(t, out.String(), "send sendCurrentYearEvent")
 	})
 
 	t.Run("Failed send", func(t *testing.T) {
 		writer := mocks.NewWriterInterface(t)
 		writer.On("WriteMessages", context.Background(), expectedMessage).Return(expectedError)
 
-		eventbus := MetaEventbus{writer: writer}
+		out := &bytes.Buffer{}
+		eventbus := MetaEventbus{
+			writer: writer,
+			out:    out,
+		}
 		err := eventbus.sendCurrentYearEvent(expectedYear)
 
 		assert.Errorf(t, err, "Expect for error")
 		assert.Equal(t, expectedError, err, "Got unexpected error")
 		writer.AssertNumberOfCalls(t, "WriteMessages", 1)
+		assert.Contains(t, out.String(), "send sendCurrentYearEvent")
 	})
 }
