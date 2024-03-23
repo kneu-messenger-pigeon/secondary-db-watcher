@@ -63,6 +63,19 @@ func TestGetDbStateDatetime(t *testing.T) {
 		)
 	})
 
+	t.Run("remove milliseconds", func(t *testing.T) {
+		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, time.Local)
+		expectedDatetimeString := "2022-11-02T04:00:00.123Z"
+		db = newDekanatDbMock(expectedDatetimeString)
+
+		actualDatetime, actualErr = getDbStateDatetime(db)
+
+		assert.NoError(t, actualErr)
+		assert.Equalf(t, expectedDatetime, actualDatetime,
+			"Expect getDbStateDatetime(db) = %s, actual: %s", expectedDatetime, actualDatetime,
+		)
+	})
+
 	t.Run("invalid datetime", func(t *testing.T) {
 		expectedErr = errors.New("cannot parse \"invalid\" as")
 		db = newDekanatDbMock("invalid")

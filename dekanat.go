@@ -71,6 +71,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, e
 
 // drop "+02:00" , "+03:00" etc in the end
 var removeTimeZone = regexp.MustCompile(`\+[0-9]{2}:[0-9]{2}$`)
+var removeMilliseconds = regexp.MustCompile(`\.[0-9]{3}`)
 
 func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	err := secondaryDekanatDb.Ping()
@@ -91,6 +92,7 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 
 	lastDatetimeString = strings.Replace(lastDatetimeString, "Z", "", 1)
 	lastDatetimeString = removeTimeZone.ReplaceAllString(lastDatetimeString, "")
+	lastDatetimeString = removeMilliseconds.ReplaceAllString(lastDatetimeString, "")
 
 	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, time.Local)
 }
