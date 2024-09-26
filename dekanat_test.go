@@ -185,7 +185,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 	t.Run("changeEducationYear", func(t *testing.T) {
 		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
+		expectedDatetime = time.Date(2023, 9, 15, 4, 0, 0, 0, loc)
 
 		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
 		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
@@ -211,7 +211,7 @@ func TestCheckDekanatDb(t *testing.T) {
 
 	t.Run("ErrorSendCurrentYearEvent", func(t *testing.T) {
 		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
+		expectedDatetime = time.Date(2023, 9, 15, 4, 0, 0, 0, loc)
 
 		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
 		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
@@ -239,8 +239,8 @@ func TestCheckDekanatDb(t *testing.T) {
 	})
 
 	t.Run("ChangeDatetime", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
+		previousDatetime = time.Date(2023, 9, 11, 4, 0, 0, 0, loc)
+		expectedDatetime = time.Date(2023, 9, 12, 4, 0, 0, 0, loc)
 
 		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
 		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
@@ -264,8 +264,8 @@ func TestCheckDekanatDb(t *testing.T) {
 	})
 
 	t.Run("ErrorSendSecondaryDbLoadedEvent", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
+		previousDatetime = time.Date(2023, 9, 11, 4, 0, 0, 0, loc)
+		expectedDatetime = time.Date(2023, 9, 12, 4, 0, 0, 0, loc)
 
 		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
 		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
