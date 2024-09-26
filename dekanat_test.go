@@ -139,9 +139,9 @@ func TestExtractEducationYearValidInput(t *testing.T) {
 			time.Date(2023, 1, 15, 4, 0, 0, 0, loc): 2022,
 			time.Date(2023, 6, 15, 4, 0, 0, 0, loc): 2022,
 			time.Date(2023, 8, 1, 4, 0, 0, 0, loc):  2022,
-			time.Date(2023, 9, 9, 4, 0, 0, 0, loc):  2022,
-			// after 10 september 2023 year should be 2023
-			time.Date(2023, 9, 10, 4, 0, 0, 0, loc): 2023,
+			// after 5 september 2023 year should be 2023
+			time.Date(2023, 9, 4, 4, 0, 0, 0, loc):  2022,
+			time.Date(2023, 9, 5, 4, 0, 0, 0, loc):  2023,
 			time.Date(2023, 11, 1, 4, 0, 0, 0, loc): 2023,
 		}
 
