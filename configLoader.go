@@ -65,7 +65,7 @@ func loadConfig(envFilename string) (Config, error) {
 	}
 
 	if config.storageFile == "" {
-		config.storageFile = "storage.txt"
+		config.storageFile = "storage.json"
 	}
 
 	return config, nil
