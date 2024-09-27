@@ -42,7 +42,7 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, e
 	var previousState dbState
 	previousStateSerialized, err := storage.Get()
 
-	if previousStateSerialized != nil && err == nil {
+	if err == nil && previousStateSerialized != nil && len(previousStateSerialized) > 10 {
 		err = json.Unmarshal(previousStateSerialized, &previousState)
 	}
 
