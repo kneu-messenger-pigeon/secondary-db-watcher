@@ -2,50 +2,55 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/kneu-messenger-pigeon/fileStorage"
+	fileStorageMocks "github.com/kneu-messenger-pigeon/fileStorage/mocks"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
 	"time"
 )
 
-var expectedGetDatetimeQuery = "SELECT FIRST 1 CON_DATA FROM TSESS_LOG ORDER BY ID DESC"
-
-func newDekanatDbMock(expectedResult interface{}) *sql.DB {
+func newDekanatDbMock(lastDatetime interface{}, firstLessonReg interface{}) *sql.DB {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		log.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
 	}
 
-	switch expectedResult.(type) {
+	setQueryResult(mock, GetLastDatetimeQuery, lastDatetime)
+	setQueryResult(mock, GetFirstLessonRegDateQuery, firstLessonReg)
+
+	return db
+}
+
+func setQueryResult(mock sqlmock.Sqlmock, query string, returnValue interface{}) {
+	switch returnValue.(type) {
 	case error:
-		mock.ExpectQuery(expectedGetDatetimeQuery).WillReturnError(expectedResult.(error))
+		mock.ExpectQuery(query).WillReturnError(returnValue.(error))
 
 	case time.Time:
-		Time := expectedResult.(time.Time)
+		Time := returnValue.(time.Time)
 
-		mock.ExpectQuery(expectedGetDatetimeQuery).WillReturnRows(
+		mock.ExpectQuery(query).WillReturnRows(
 			sqlmock.NewRows([]string{"CON_DATA"}).AddRow(Time.Format(FirebirdTimeFormat)),
 		)
 
 	case string:
-		mock.ExpectQuery(expectedGetDatetimeQuery).WillReturnRows(
-			sqlmock.NewRows([]string{"CON_DATA"}).AddRow(expectedResult),
+		mock.ExpectQuery(query).WillReturnRows(
+			sqlmock.NewRows([]string{"CON_DATA"}).AddRow(returnValue),
 		)
 	case nil:
-		mock.ExpectQuery(expectedGetDatetimeQuery).WillReturnRows(
+		mock.ExpectQuery(query).WillReturnRows(
 			sqlmock.NewRows([]string{"CON_DATA"}),
 		)
 	}
-
-	return db
 }
 
 func TestGetDbStateDatetime(t *testing.T) {
 	var db *sql.DB
 	var expectedDatetime time.Time
+	var expectedRegDate time.Time
 	var expectedErr error
 
 	var actualDatetime time.Time
@@ -53,7 +58,8 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	t.Run("valid datetime", func(t *testing.T) {
 		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, time.Local)
-		db = newDekanatDbMock(expectedDatetime)
+		expectedRegDate = time.Date(2022, 9, 3, 0, 0, 0, 0, time.Local)
+		db = newDekanatDbMock(expectedDatetime, expectedRegDate)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
 
@@ -65,8 +71,10 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	t.Run("remove milliseconds", func(t *testing.T) {
 		expectedDatetime = time.Date(2022, 11, 2, 4, 0, 0, 0, time.Local)
+		expectedRegDate = time.Date(2022, 9, 3, 0, 0, 0, 0, time.Local)
+
 		expectedDatetimeString := "2022-11-02T04:00:00.123Z"
-		db = newDekanatDbMock(expectedDatetimeString)
+		db = newDekanatDbMock(expectedDatetimeString, expectedDatetime)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
 
@@ -78,7 +86,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	t.Run("invalid datetime", func(t *testing.T) {
 		expectedErr = errors.New("cannot parse \"invalid\" as")
-		db = newDekanatDbMock("invalid")
+		db = newDekanatDbMock("invalid", nil)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
 
@@ -90,7 +98,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	t.Run("error instead of datetime", func(t *testing.T) {
 		expectedErr = errors.New("dummy error")
-		db = newDekanatDbMock(expectedErr)
+		db = newDekanatDbMock(expectedErr, nil)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
 
@@ -102,7 +110,7 @@ func TestGetDbStateDatetime(t *testing.T) {
 
 	t.Run("empty result from DB", func(t *testing.T) {
 		expectedErr = errors.New("empty last date from DB: sql: no rows in result set")
-		db = newDekanatDbMock(nil)
+		db = newDekanatDbMock(nil, nil)
 
 		actualDatetime, actualErr = getDbStateDatetime(db)
 
@@ -173,57 +181,75 @@ func TestExtractEducationYearValidInput(t *testing.T) {
 
 func TestCheckDekanatDb(t *testing.T) {
 	var db *sql.DB
-	var storageInstance *fileStorage.MockInterface
+	var storageInstance *fileStorageMocks.Interface
 	var producer *MockMetaEventbusInterface
-	var previousDatetime time.Time
-	var expectedDatetime time.Time
-	var previousDatetimeString string
-	var expectedDatetimeString string
+	var previousState dbState
+	var expectedState dbState
+
 	var err error
 	var expectedError error
 	loc := time.Local
 
+	var serializeState = func(state dbState) []byte {
+		s, _ := json.Marshal(state)
+		return s
+	}
+
 	t.Run("changeEducationYear", func(t *testing.T) {
-		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 15, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2022, 6, 1, 4, 0, 0, 0, loc),
+			EducationYear:  2021,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 15, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		db = newDekanatDbMock(expectedDatetime)
+		db = newDekanatDbMock(expectedState.ActualDatetime, expectedState.ActualDatetime)
 
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
-		storageInstance.On("Set", expectedDatetimeString).Return(nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(nil)
 
 		producer = NewMockMetaEventbusInterface(t)
 		producer.On("sendCurrentYearEvent", 2023).Return(nil)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(nil)
+		producer.On(
+			"sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		).Return(nil)
 
 		err = checkDekanatDb(db, storageInstance, producer)
 
 		assert.NoErrorf(t, err, "checkDekanat failed with error: %s", err)
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
+		producer.AssertCalled(
+			t, "sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		)
 		producer.AssertCalled(t, "sendCurrentYearEvent", 2023)
-		storageInstance.AssertCalled(t, "Set", expectedDatetimeString)
+		storageInstance.AssertCalled(t, "Set", serializeState(expectedState))
 	})
 
 	t.Run("ErrorSendCurrentYearEvent", func(t *testing.T) {
-		previousDatetime = time.Date(2022, 6, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 15, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2022, 6, 1, 4, 0, 0, 0, loc),
+			EducationYear:  2021,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 15, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
 		expectedError = errors.New("dummy error sendCurrentYearEvent")
 
-		db = newDekanatDbMock(expectedDatetime)
+		db = newDekanatDbMock(expectedState.ActualDatetime, expectedState.ActualDatetime)
 
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
-		storageInstance.On("Set", expectedDatetimeString).Return(nil)
-		storageInstance.On("Set", previousDatetimeString).Return(nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(nil)
+		storageInstance.On("Set", serializeState(previousState)).Return(nil)
 
 		producer = NewMockMetaEventbusInterface(t)
 		producer.On("sendCurrentYearEvent", 2023).Return(expectedError)
@@ -232,77 +258,102 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		assert.Error(t, err, "checkDekanat should fails with error")
 
-		producer.AssertNotCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
+		producer.AssertNotCalled(t, "sendSecondaryDbLoadedEvent")
 		producer.AssertCalled(t, "sendCurrentYearEvent", 2023)
-		storageInstance.AssertCalled(t, "Set", expectedDatetimeString)
-		storageInstance.AssertCalled(t, "Set", previousDatetimeString)
+		storageInstance.AssertCalled(t, "Set", serializeState(expectedState))
+		storageInstance.AssertCalled(t, "Set", serializeState(previousState))
 	})
 
 	t.Run("ChangeDatetime", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 11, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 12, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 11, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 12, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		db = newDekanatDbMock(expectedDatetime)
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
 
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
-		storageInstance.On("Set", expectedDatetimeString).Return(nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(nil)
 
 		producer = NewMockMetaEventbusInterface(t)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(nil)
+		producer.On(
+			"sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		).Return(nil)
 
 		err = checkDekanatDb(db, storageInstance, producer)
 
 		assert.NoErrorf(t, err, "checkDekanat failed with error: %s", err)
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
+		producer.AssertCalled(
+			t, "sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		)
+
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertCalled(t, "Set", expectedDatetimeString)
+		storageInstance.AssertCalled(t, "Set", serializeState(expectedState))
 	})
 
 	t.Run("ErrorSendSecondaryDbLoadedEvent", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 11, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 12, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 11, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 12, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
+
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(nil)
+		storageInstance.On("Set", serializeState(previousState)).Return(nil)
 
 		expectedError = errors.New("dummy error sendCurrentYearEvent")
 
-		db = newDekanatDbMock(expectedDatetime)
-
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
-		storageInstance.On("Set", expectedDatetimeString).Return(nil)
-		storageInstance.On("Set", previousDatetimeString).Return(nil)
-
 		producer = NewMockMetaEventbusInterface(t)
-		producer.On("sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year()).Return(expectedError)
+		producer.On(
+			"sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		).Return(expectedError)
 
 		err = checkDekanatDb(db, storageInstance, producer)
 
 		assert.Error(t, err, "expect checkDekanat fails")
 
-		producer.AssertCalled(t, "sendSecondaryDbLoadedEvent", expectedDatetime, previousDatetime, expectedDatetime.Year())
-		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertCalled(t, "Set", expectedDatetimeString)
-		storageInstance.AssertCalled(t, "Set", previousDatetimeString)
+		producer.AssertCalled(
+			t, "sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		)
+		producer.AssertNotCalled(t, "sendCurrentYearEvent")
+		storageInstance.AssertCalled(t, "Set", serializeState(expectedState))
+		storageInstance.AssertCalled(t, "Set", serializeState(previousState))
 	})
 
 	t.Run("NoChangeDatetime", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		db = newDekanatDbMock(expectedDatetime)
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
 
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
 
 		producer = NewMockMetaEventbusInterface(t)
 		err = checkDekanatDb(db, storageInstance, producer)
@@ -311,14 +362,14 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertNumberOfCalls(t, "set", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
 	})
 
 	t.Run("DekanatDbError", func(t *testing.T) {
 		expectedError = errors.New("dummy error")
 
-		db = newDekanatDbMock(expectedError)
-		storageInstance = fileStorage.NewMockInterface(t)
+		db = newDekanatDbMock(expectedError, nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
 		producer = NewMockMetaEventbusInterface(t)
 
 		err = checkDekanatDb(db, storageInstance, producer)
@@ -328,20 +379,26 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertNumberOfCalls(t, "set", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
 	})
 
 	t.Run("DekanatDbWrongDatetime", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		expectedError = errors.New("failed to detect current education year")
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		db = newDekanatDbMock("2000-01-01T04:00:00Z")
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
+		db = newDekanatDbMock("2000-01-01T04:00:00Z", "2000-09-02")
+		storageInstance = fileStorageMocks.NewInterface(t)
 
 		producer = NewMockMetaEventbusInterface(t)
+
+		expectedError = errors.New("failed to detect current education year")
 
 		err = checkDekanatDb(db, storageInstance, producer)
 
@@ -353,20 +410,121 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertNumberOfCalls(t, "set", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
+	})
+
+	t.Run("DekanatDbNoEducationYear", func(t *testing.T) {
+		db = newDekanatDbMock("2000-01-01T04:00:00Z", nil)
+		storageInstance = fileStorageMocks.NewInterface(t)
+
+		producer = NewMockMetaEventbusInterface(t)
+
+		expectedError = errors.New("failed to detect current education year")
+
+		err = checkDekanatDb(db, storageInstance, producer)
+
+		assert.Error(t, err)
+		assert.Containsf(
+			t, err.Error(), expectedError.Error(),
+			"Expected %s, actual %s", expectedError, err,
+		)
+
+		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
+		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
+	})
+
+	t.Run("DekanatDbErrorGettingEducationYear", func(t *testing.T) {
+		dbError := errors.New("dummy error")
+
+		db = newDekanatDbMock("2000-01-01T04:00:00Z", dbError)
+		storageInstance = fileStorageMocks.NewInterface(t)
+
+		producer = NewMockMetaEventbusInterface(t)
+
+		expectedError = errors.New("failed to detect current education year")
+
+		err = checkDekanatDb(db, storageInstance, producer)
+
+		assert.Error(t, err)
+		assert.Containsf(
+			t, err.Error(), expectedError.Error(),
+			"Expected %s, actual %s", expectedError, err,
+		)
+
+		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
+		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
+	})
+
+	t.Run("DekanatDbBadDateEducationYear", func(t *testing.T) {
+		db = newDekanatDbMock("2000-01-01T04:00:00Z", "incorrect-date")
+		storageInstance = fileStorageMocks.NewInterface(t)
+
+		producer = NewMockMetaEventbusInterface(t)
+
+		expectedError = errors.New("failed to detect current education year")
+
+		err = checkDekanatDb(db, storageInstance, producer)
+
+		assert.Error(t, err)
+		assert.Containsf(
+			t, err.Error(), expectedError.Error(),
+			"Expected %s, actual %s", expectedError, err,
+		)
+
+		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
+		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
+	})
+
+	t.Run("DekanatDbSecondSemesterDateEducationYear", func(t *testing.T) {
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 4, 14, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 4, 15, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2024-04-15")
+
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(nil)
+
+		producer = NewMockMetaEventbusInterface(t)
+		producer.On(
+			"sendSecondaryDbLoadedEvent",
+			expectedState.ActualDatetime, previousState.ActualDatetime, expectedState.EducationYear,
+		).Return(nil)
+
+		err = checkDekanatDb(db, storageInstance, producer)
+
+		assert.NoError(t, err)
+		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 1)
+		storageInstance.AssertNumberOfCalls(t, "Set", 1)
 	})
 
 	t.Run("StorageGetError", func(t *testing.T) {
-		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
 
 		expectedError = errors.New("Failed to detect current education year")
 
-		db = newDekanatDbMock(expectedDatetime)
-
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return("", expectedError)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(nil, expectedError)
 
 		producer = NewMockMetaEventbusInterface(t)
 
@@ -379,23 +537,28 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertNumberOfCalls(t, "set", 0)
+		storageInstance.AssertNumberOfCalls(t, "Set", 0)
 	})
 
 	t.Run("StorageSetError", func(t *testing.T) {
-		previousDatetime = time.Date(2023, 9, 1, 4, 0, 0, 0, loc)
-		expectedDatetime = time.Date(2023, 9, 2, 4, 0, 0, 0, loc)
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 1, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
 
-		previousDatetimeString = previousDatetime.Format(StorageTimeFormat)
-		expectedDatetimeString = expectedDatetime.Format(StorageTimeFormat)
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
+		storageInstance = fileStorageMocks.NewInterface(t)
 
 		expectedError = errors.New("dummy set error")
 
-		db = newDekanatDbMock(expectedDatetime)
-
-		storageInstance = fileStorage.NewMockInterface(t)
-		storageInstance.On("Get").Return(previousDatetimeString, nil)
-		storageInstance.On("Set", expectedDatetimeString).Return(expectedError)
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+		storageInstance.On("Set", serializeState(expectedState)).Return(expectedError)
 
 		producer = NewMockMetaEventbusInterface(t)
 
@@ -406,7 +569,6 @@ func TestCheckDekanatDb(t *testing.T) {
 
 		producer.AssertNumberOfCalls(t, "sendSecondaryDbLoadedEvent", 0)
 		producer.AssertNumberOfCalls(t, "sendCurrentYearEvent", 0)
-		storageInstance.AssertCalled(t, "Set", expectedDatetimeString)
+		storageInstance.AssertCalled(t, "Set", serializeState(expectedState))
 	})
-
 }

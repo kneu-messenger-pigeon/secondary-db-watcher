@@ -14,6 +14,10 @@ github.com/kneu-messenger-pigeon/events v0.1.41 h1:Yzzp7oyVArzKzzI93HmLX+k3lUn8E
 github.com/kneu-messenger-pigeon/events v0.1.41/go.mod h1:Q6X8B9gKZpKbby9gisLumvGT1xCWBM7bAFnviYi6MBQ=
 github.com/kneu-messenger-pigeon/fileStorage v1.0.0 h1:5kWwAJZ6TkxEBaytXo7QwEbQpvg5OWSSwUlO4cWbncQ=
 github.com/kneu-messenger-pigeon/fileStorage v1.0.0/go.mod h1:v6IRKfG5C45B6Ls6781bmnLNwAE3e6ZcWuU0N55l66M=
+github.com/kneu-messenger-pigeon/fileStorage v1.1.2 h1:kH8AklG9rTxF1t8+ZdjALizAXOh9QCYV1qEwk8pPTfA=
+github.com/kneu-messenger-pigeon/fileStorage v1.1.2/go.mod h1:v6IRKfG5C45B6Ls6781bmnLNwAE3e6ZcWuU0N55l66M=
+github.com/kneu-messenger-pigeon/fileStorage v1.1.4 h1:wFBmG9tQV2PBEwfsa3bWS1RnfHpK+bSsINmDrO34gbw=
+github.com/kneu-messenger-pigeon/fileStorage v1.1.4/go.mod h1:v6IRKfG5C45B6Ls6781bmnLNwAE3e6ZcWuU0N55l66M=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
 github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NBk=

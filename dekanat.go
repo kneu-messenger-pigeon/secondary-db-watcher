@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/kneu-messenger-pigeon/fileStorage"
@@ -14,55 +15,65 @@ const FirebirdTimeFormat = "2006-01-02T15:04:05"
 
 const StorageTimeFormat = time.RFC3339
 
+const GetLastDatetimeQuery = "SELECT FIRST 1 CON_DATA FROM TSESS_LOG ORDER BY ID DESC"
+
+const GetFirstLessonRegDateQuery = "SELECT FIRST 1 REGDATE FROM T_PRJURN ORDER BY REGDATE ASC"
+
+func makeDbState(secondaryDekanatDb *sql.DB) (state dbState, err error) {
+	state.ActualDatetime, err = getDbStateDatetime(secondaryDekanatDb)
+	if err != nil {
+		return state, errors.New("Failed to get last datetime from DB: " + err.Error())
+	}
+
+	state.EducationYear, err = getCurrentYear(secondaryDekanatDb)
+	if err != nil {
+		return state, errors.New("failed to detect current education year: " + err.Error())
+	}
+
+	return state, nil
+}
+
 func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, eventbus MetaEventbusInterface) error {
-	var currentDbStateDatetime time.Time
-	var previousDbStateDatetime time.Time
-	var err error
-
-	currentDbStateDatetime, err = getDbStateDatetime(secondaryDekanatDb)
+	currentState, err := makeDbState(secondaryDekanatDb)
 	if err != nil {
-		return errors.New("Failed to get last datetime from DB: " + err.Error())
+		return errors.New("Failed to get DB state: " + err.Error())
 	}
 
-	previousDbStateDatetimeString, err := storage.Get()
-	if previousDbStateDatetimeString != "" && err == nil {
-		previousDbStateDatetime, err = time.ParseInLocation(StorageTimeFormat, previousDbStateDatetimeString, time.Local)
+	var previousState dbState
+	previousStateSerialized, err := storage.Get()
+
+	if previousStateSerialized != nil && err == nil {
+		err = json.Unmarshal(previousStateSerialized, &previousState)
 	}
 
 	if err != nil {
-		return errors.New("Failed to get previous DB state datetime from Storage: " + err.Error())
+		return errors.New("Failed to get previous DB state from Storage: " + err.Error())
 	}
 
-	if previousDbStateDatetime.Equal(currentDbStateDatetime) {
+	if previousState.isEqual(currentState) {
 		return nil
 	}
 
-	currentEducationYear, err := extractEducationYear(currentDbStateDatetime)
-	if err != nil {
-		return errors.New("failed to detect current education year: " + err.Error())
-	}
-
-	err = storage.Set(currentDbStateDatetime.Format(StorageTimeFormat))
+	currentStateSerialized, _ := json.Marshal(currentState)
+	err = storage.Set(currentStateSerialized)
 	if err != nil {
 		return err
 	}
 
-	var previousEducationYear int
-	if !previousDbStateDatetime.IsZero() {
-		previousEducationYear, _ = extractEducationYear(previousDbStateDatetime)
-	}
-
-	if currentEducationYear != previousEducationYear {
-		err = eventbus.sendCurrentYearEvent(currentEducationYear)
+	if currentState.EducationYear != previousState.EducationYear {
+		err = eventbus.sendCurrentYearEvent(currentState.EducationYear)
 		if err != nil {
-			_ = storage.Set(previousDbStateDatetime.Format(StorageTimeFormat))
+			_ = storage.Set(previousStateSerialized)
 			return errors.New("Failed to send Current year event to Kafka: " + err.Error())
 		}
 	}
 
-	err = eventbus.sendSecondaryDbLoadedEvent(currentDbStateDatetime, previousDbStateDatetime, currentEducationYear)
+	err = eventbus.sendSecondaryDbLoadedEvent(
+		currentState.ActualDatetime, previousState.ActualDatetime,
+		currentState.EducationYear,
+	)
 	if err != nil {
-		_ = storage.Set(previousDbStateDatetime.Format(StorageTimeFormat))
+		_ = storage.Set(previousStateSerialized)
 		return errors.New("Failed to send Secondary DB loaded Event to Kafka: " + err.Error())
 	}
 
@@ -80,7 +91,7 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	}
 
 	var lastDatetimeString string
-	rows := secondaryDekanatDb.QueryRow("SELECT FIRST 1 CON_DATA FROM TSESS_LOG ORDER BY ID DESC")
+	rows := secondaryDekanatDb.QueryRow(GetLastDatetimeQuery)
 	if rows.Err() != nil {
 		return time.Time{}, rows.Err()
 	}
@@ -95,6 +106,39 @@ func getDbStateDatetime(secondaryDekanatDb *sql.DB) (time.Time, error) {
 	lastDatetimeString = removeMilliseconds.ReplaceAllString(lastDatetimeString, "")
 
 	return time.ParseInLocation(FirebirdTimeFormat, lastDatetimeString, time.Local)
+}
+
+func getCurrentYear(secondaryDekanatDb *sql.DB) (int, error) {
+	var firstLessonRegDateString string
+	rows := secondaryDekanatDb.QueryRow(GetFirstLessonRegDateQuery)
+	if rows.Err() != nil {
+		return 0, rows.Err()
+	}
+
+	err := rows.Scan(&firstLessonRegDateString)
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("empty last date from DB: %s", err))
+	}
+
+	// git first 10 chars of string, like "2024-09-02"
+	firstLessonRegDateString = firstLessonRegDateString[:10]
+	firstLessonRegDate, err := time.ParseInLocation("2006-01-02", firstLessonRegDateString, time.Local)
+
+	if err != nil {
+		return 0, errors.New(fmt.Sprintf("failed to parse first lesson registration date: %s", err))
+	}
+
+	year := firstLessonRegDate.Year()
+	// if first half of year - definitely it is education year start year ago
+	if firstLessonRegDate.Month() < 8 {
+		year--
+	}
+
+	if year < 2022 {
+		return 0, errors.New(fmt.Sprintf("wrong education (should be 2022 or later): %d", year))
+	}
+
+	return year, nil
 }
 
 func extractEducationYear(dbStateDatetime time.Time) (int, error) {
