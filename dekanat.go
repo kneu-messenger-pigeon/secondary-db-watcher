@@ -109,7 +109,7 @@ func extractEducationYear(dbStateDatetime time.Time) (int, error) {
 		year--
 	}
 
-	if month == 9 && dbStateDatetime.Day() < 5 {
+	if month == 9 && dbStateDatetime.Day() < 1 {
 		year--
 	}
 
