@@ -109,10 +109,6 @@ func extractEducationYear(dbStateDatetime time.Time) (int, error) {
 		year--
 	}
 
-	if month == 9 && dbStateDatetime.Day() < 1 {
-		year--
-	}
-
 	if year < 2022 {
 		return 0, errors.New(fmt.Sprintf("wrong education (should be 2022 or later): %d", year))
 	}
