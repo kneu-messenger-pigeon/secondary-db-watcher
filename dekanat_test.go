@@ -365,6 +365,28 @@ func TestCheckDekanatDb(t *testing.T) {
 		storageInstance.AssertNumberOfCalls(t, "Set", 0)
 	})
 
+	t.Run("ChangeLessThan3Hours", func(t *testing.T) {
+		previousState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 4, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		expectedState = dbState{
+			ActualDatetime: time.Date(2023, 9, 2, 6, 0, 0, 0, loc),
+			EducationYear:  2023,
+		}
+
+		db = newDekanatDbMock(expectedState.ActualDatetime, "2023-09-02")
+
+		storageInstance = fileStorageMocks.NewInterface(t)
+		storageInstance.On("Get").Return(serializeState(previousState), nil)
+
+		producer = NewMockMetaEventbusInterface(t)
+		err = checkDekanatDb(db, storageInstance, producer)
+
+		assert.NoErrorf(t, err, "checkDekanat failed with error: %s", err)
+	})
+
 	t.Run("DekanatDbError", func(t *testing.T) {
 		expectedError = errors.New("dummy error")
 

@@ -54,6 +54,11 @@ func checkDekanatDb(secondaryDekanatDb *sql.DB, storage fileStorage.Interface, e
 		return nil
 	}
 
+	// skip if current db state is less than 3 hours from previous
+	if currentState.ActualDatetime.Sub(previousState.ActualDatetime) < time.Hour*3 {
+		return nil
+	}
+
 	currentStateSerialized, _ := json.Marshal(currentState)
 	err = storage.Set(currentStateSerialized)
 	if err != nil {
