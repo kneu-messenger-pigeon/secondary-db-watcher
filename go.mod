@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/joho/godotenv v1.5.1
-	github.com/kneu-messenger-pigeon/events v0.1.41
+	github.com/kneu-messenger-pigeon/events v0.1.42
 	github.com/kneu-messenger-pigeon/fileStorage v1.1.6
 	github.com/nakagami/firebirdsql v0.9.11
 	github.com/segmentio/kafka-go v0.4.47
